@@ -31,11 +31,7 @@ export function copy<T>(array: T[]): T[]
 export function copy<T>(array: Arrayable<T>): Arrayable<T>
 
 export function copy<T>(array: Arrayable<T>): Arrayable<T> {
-  if (Array.isArray(array)) {
-    return array.slice()
-  } else {
-    return new (array.constructor as any)(array)
-  }
+  return array.slice()
 }
 
 export function splice<T>(array: T[], start: number, k?: number, ...items: T[]): T[]
