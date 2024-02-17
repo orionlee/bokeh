@@ -259,7 +259,7 @@ export class GlyphRendererView extends DataRendererView {
   async set_data(indices?: number[]): Promise<void> {
     const source = this.model.data_source
 
-    this.all_indices = OpaqueIndices.from_packed(this.model.view.indices)
+    this.all_indices = OpaqueIndices.from(this.model.view.indices)
     const {all_indices} = this
 
     await this.glyph.set_data(source, all_indices, indices)
@@ -332,8 +332,7 @@ export class GlyphRendererView extends DataRendererView {
     this.map_data()
 
     // all_indices is in full data space, indices is converted to subset space by mask_data (that may use the spatial index)
-    //const all_indices = [...this.all_indices]
-    const all_indices = this.all_indices.array
+    const all_indices = [...this.all_indices]
     let indices = [...this._update_masked_indices()]
 
     // selected is in full set space

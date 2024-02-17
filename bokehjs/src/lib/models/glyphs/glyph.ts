@@ -470,7 +470,7 @@ export abstract class GlyphView extends DOMComponentView {
     this._index = index
   }
 
-  mask_data(): PackedIndices {
+  mask_data(): Indices {
     /** Returns subset indices in the viewport. */
     if (this._mask_data == null) {
       return PackedIndices.all_set(this.data_size)
@@ -479,7 +479,7 @@ export abstract class GlyphView extends DOMComponentView {
     }
   }
 
-  protected _mask_data?(): PackedIndices
+  protected _mask_data?(): Indices
 
   map_data(): void {
     const {x_scale, y_scale} = this.renderer.coordinates
