@@ -2632,7 +2632,7 @@
       value: 0,
     },
   },
-  Band: {
+  BandGlyph: {
     __extends__: [
       "LineGlyph",
       "FillGlyph",
@@ -4714,7 +4714,7 @@
       type: "map",
     },
   },
-  Whisker: {
+  WhiskerGlyph: {
     __extends__: "LineGlyph",
     dimension: "height",
     lower: {
