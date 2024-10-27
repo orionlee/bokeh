@@ -255,6 +255,19 @@ export class ToolbarView extends UIElementView {
       this._overflow_menu.show(this._menu_at())
     }
   }
+
+  toggle_auto(force?: boolean): void {
+    if (this.model.active_scroll != "auto") {
+      return
+    }
+
+    for (const tool of this.model.tools) {
+      if (tool.event_types.includes("scroll")) {
+        tool.active = force ?? !tool.active
+        break
+      }
+    }
+  }
 }
 
 import {Struct, Ref, Nullable, List, Or} from "core/kinds"
