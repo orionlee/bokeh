@@ -30,6 +30,16 @@ import type {RedoTool} from "./actions/redo_tool"
 import type {ResetTool} from "./actions/reset_tool"
 import type {HelpTool} from "./actions/help_tool"
 
+import type {KeyCombination} from "core/dom"
+
+export type KeyBinding = {
+  keys: KeyCombination[]
+  cmd?: string
+  if?: () => boolean
+  action: () => void | Promise<void>
+  priority?: number
+}
+
 import type {ToolButtonView} from "./tool_button"
 
 export type ToolAliases = {
@@ -119,6 +129,10 @@ export abstract class ToolView extends View {
 
   _keydown?(e: KeyEvent): void | boolean
   _keyup?(e: KeyEvent): void | boolean
+
+  key_bindings(): KeyBinding[] {
+    return []
+  }
 }
 
 export namespace Tool {
