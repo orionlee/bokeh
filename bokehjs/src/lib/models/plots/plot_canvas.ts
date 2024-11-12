@@ -107,12 +107,12 @@ export class PlotView extends LayoutDOMView implements Paintable {
   }
 
   protected _title?: Title
-  protected _toolbar?: ToolbarPanel
+  protected _toolbar_panel: ToolbarPanel
   protected _attribution: Panel
   protected _notifications: Panel
 
   get toolbar_panel(): ToolbarPanelView | null {
-    return this._toolbar != null ? this.views.find_one(this._toolbar) : null
+    return this.views.find_one(this._toolbar_panel)
   }
 
   protected _outer_bbox: BBox = new BBox()
@@ -320,10 +320,14 @@ export class PlotView extends LayoutDOMView implements Paintable {
     }
 
     const {toolbar_location, toolbar_inner, toolbar} = this.model
-    if (toolbar_location != null) {
-      this._toolbar = new ToolbarPanel({toolbar})
-      toolbar.location = toolbar_location
-      toolbar.inner = toolbar_inner
+    this._toolbar_panel = new ToolbarPanel({toolbar})
+
+    const toolbar_visible = toolbar_location != null
+    this._toolbar_panel.visible = toolbar_visible
+    this._toolbar_panel.toolbar.inner = toolbar_inner
+
+    if (toolbar_visible) {
+      this._toolbar_panel.toolbar.location = toolbar_location
     }
 
     const {hidpi, output_backend} = this.model
@@ -467,35 +471,33 @@ export class PlotView extends LayoutDOMView implements Paintable {
       get_side(title_location).push(this._title)
     }
 
-    if (this._toolbar != null) {
-      const {location} = this._toolbar.toolbar
+    const {location} = this._toolbar_panel.toolbar
 
-      if (!this.model.toolbar_inner) {
-        const panels = get_side(location)
-        let push_toolbar = true
+    if (!this.model.toolbar_inner) {
+      const panels = get_side(location)
+      let push_toolbar = true
 
-        if (this.model.toolbar_sticky) {
-          for (let i = 0; i < panels.length; i++) {
-            const panel = panels[i]
-            if (panel instanceof Title) {
-              if (location == "above" || location == "below") {
-                panels[i] = [panel, this._toolbar]
-              } else {
-                panels[i] = [this._toolbar, panel]
-              }
-              push_toolbar = false
-              break
+      if (this.model.toolbar_sticky) {
+        for (let i = 0; i < panels.length; i++) {
+          const panel = panels[i]
+          if (panel instanceof Title) {
+            if (location == "above" || location == "below") {
+              panels[i] = [panel, this._toolbar_panel]
+            } else {
+              panels[i] = [this._toolbar_panel, panel]
             }
+            push_toolbar = false
+            break
           }
         }
-
-        if (push_toolbar) {
-          panels.push(this._toolbar)
-        }
-      } else {
-        const panels = get_side(location, true)
-        panels.push(this._toolbar)
       }
+
+      if (push_toolbar) {
+        panels.push(this._toolbar_panel)
+      }
+    } else {
+      const panels = get_side(location, true)
+      panels.push(this._toolbar_panel)
     }
 
     const set_layout = (side: Side, model: Annotation | Axis): Layoutable | undefined => {
@@ -784,9 +786,7 @@ export class PlotView extends LayoutDOMView implements Paintable {
       yield this._title
     }
 
-    if (this._toolbar != null) {
-      yield this._toolbar
-    }
+    yield this._toolbar_panel
 
     for (const [, view] of this.tool_views) {
       yield* view.overlays
@@ -909,25 +909,18 @@ export class PlotView extends LayoutDOMView implements Paintable {
     this.connect(this.model.change, () => this.request_repaint())
     this.connect(this.model.reset, () => this.reset())
 
-    const {toolbar_location} = this.model.properties
-    this.on_change(toolbar_location, async () => {
-      const {toolbar_location} = this.model
-      if (this._toolbar != null) {
-        if (toolbar_location != null) {
-          this._toolbar.toolbar.location = toolbar_location
-        } else {
-          this._toolbar = undefined
-          await this._update_renderers()
-        }
-      } else {
-        if (toolbar_location != null) {
-          const {toolbar, toolbar_inner} = this.model
-          this._toolbar = new ToolbarPanel({toolbar})
-          toolbar.location = toolbar_location
-          toolbar.inner = toolbar_inner
-          await this._update_renderers()
-        }
+    const {toolbar_location, toolbar_inner} = this.model.properties
+    this.on_change([toolbar_location, toolbar_inner], async () => {
+      const {toolbar_location, toolbar_inner} = this.model
+
+      const toolbar_visible = toolbar_location != null
+      this._toolbar_panel.visible = toolbar_visible
+      this._toolbar_panel.toolbar.inner = toolbar_inner
+
+      if (toolbar_visible) {
+        this._toolbar_panel.toolbar.location = toolbar_location
       }
+
       this.invalidate_layout()
     })
 
@@ -1375,7 +1368,9 @@ export class PlotView extends LayoutDOMView implements Paintable {
   }
 
   override serializable_children(): View[] {
-    // TODO temporarily remove CanvasPanel views to reduce baseline noise
-    return super.serializable_children().filter((view) => view.model instanceof CartesianFrame || !(view.model instanceof CanvasPanel))
+    // TODO temporarily remove CanvasPanel and hidden ToolbarPanel views to reduce baseline noise
+    return super.serializable_children()
+      .filter((view) => view.model instanceof CartesianFrame || !(view.model instanceof CanvasPanel))
+      .filter((view) => !(view.model instanceof ToolbarPanel) || view.model.visible)
   }
 }
