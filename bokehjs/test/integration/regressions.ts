@@ -31,6 +31,7 @@ import {
   Tooltip,
   Node, Indexed,
   Dialog,
+  ScaleBar,
 } from "@bokehjs/models"
 
 import {
@@ -4153,6 +4154,24 @@ describe("Bug", () => {
         [p4, 2, 2],
       ]
       await view.ready
+    })
+  })
+
+  describe("in issue #14153", () => {
+    it("doesn't allow correctly position ScaleBar annotation", async () => {
+      const p = fig([400, 200], {toolbar_location: "above"})
+      p.scatter([1, 2, 3], [1, 2, 3], {size: 20})
+
+      const scale_bar = new ScaleBar({
+        margin: 0,
+        padding: 0,
+        range: p.x_range,
+        orientation: "horizontal",
+        location: "bottom_right",
+      })
+      p.add_layout(scale_bar)
+
+      await display(p)
     })
   })
 })
