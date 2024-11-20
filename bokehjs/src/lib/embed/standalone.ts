@@ -61,8 +61,6 @@ export async function add_document_standalone(document: Document, element: Embed
       const root_el = roots[i] ?? element
       view.build(root_el)
     }
-
-    index.add(view)
   }
 
   async function render_model(model: HasProps): Promise<void> {

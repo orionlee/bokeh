@@ -123,11 +123,7 @@ export class ViewManager extends AbstractViewQuery {
   }
 
   async build_view<T extends HasProps>(model: T, parent: Options<ViewOf<T>>["parent"] = null): Promise<ViewOf<T>> {
-    const view = await build_view(model, {owner: this, parent})
-    if (parent == null) {
-      this.add(view)
-    }
-    return view
+    return await build_view(model, {owner: this, parent})
   }
 
   get<T extends HasProps>(model: T): ViewOf<T> | null {
@@ -149,8 +145,10 @@ export class ViewManager extends AbstractViewQuery {
   }
 
   add(view: View): void {
-    this._roots.add(view)
-    this.global?.add(view)
+    if (view.parent != null) {
+      this._roots.add(view)
+      this.global?.add(view)
+    }
   }
 
   delete(view: View): void {

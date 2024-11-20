@@ -13,6 +13,7 @@ async function _build_view<T extends HasProps>(view_cls: T["default_view"], mode
   assert(view_cls != null, "model doesn't implement a view")
   const view = new view_cls({...options, model})
   view.initialize()
+  view.owner.add(view)
   await view.lazy_initialize()
   return view
 }
