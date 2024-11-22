@@ -7,11 +7,7 @@ abstract class AbstractViewQuery {
 
   abstract [Symbol.iterator](): IterViews
 
-  *all_views(): IterViews {
-    yield* this.query(() => true)
-  }
-
-  *query(fn: (view: View) => boolean): IterViews {
+  *collect(fn?: (view: View) => boolean): IterViews {
     const visited = new Set<View>()
 
     function* descend(view: View): IterViews {
@@ -21,7 +17,7 @@ abstract class AbstractViewQuery {
 
       visited.add(view)
 
-      if (fn(view)) {
+      if (fn == null || fn(view)) {
         yield view
       }
 
@@ -33,6 +29,12 @@ abstract class AbstractViewQuery {
     for (const view of this) {
       yield* descend(view)
     }
+  }
+
+  abstract query(fn: (view: View) => boolean): IterViews
+
+  *all_views(): IterViews {
+    yield* this.query(() => true)
   }
 
   query_one(fn: (view: View) => boolean): View | null {
@@ -104,6 +106,10 @@ export class ViewQuery extends AbstractViewQuery {
     yield this.view
   }
 
+  *query(fn: (view: View) => boolean): IterViews {
+    yield* this.collect(fn)
+  }
+
   override toString(): string {
     return `ViewQuery(${this.view})`
   }
@@ -111,10 +117,12 @@ export class ViewQuery extends AbstractViewQuery {
 
 export class ViewManager extends AbstractViewQuery {
   protected readonly _roots: Set<View>
+  protected readonly _views: Set<View>
 
   constructor(roots: Iterable<View> = [], protected parent?: ViewManager) {
     super()
     this._roots = new Set(roots)
+    this._views = new Set(this.collect())
   }
 
   override toString(): string {
@@ -124,6 +132,14 @@ export class ViewManager extends AbstractViewQuery {
 
   async build_view<T extends HasProps>(model: T, parent: Options<ViewOf<T>>["parent"] = null): Promise<ViewOf<T>> {
     return await build_view(model, {owner: this, parent})
+  }
+
+  *query(fn: (view: View) => boolean): IterViews {
+    for (const view of this._views) {
+      if (fn(view)) {
+        yield view
+      }
+    }
   }
 
   get<T extends HasProps>(model: T): ViewOf<T> | null {
@@ -149,9 +165,11 @@ export class ViewManager extends AbstractViewQuery {
       this._roots.add(view)
       this.parent?.add(view)
     }
+    this._views.add(view)
   }
 
   delete(view: View): void {
+    this._views.delete(view)
     this._roots.delete(view)
     this.parent?.delete(view)
   }
