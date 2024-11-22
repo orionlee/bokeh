@@ -1,12 +1,11 @@
 import type {Arrayable, ArrayableNew, Indices} from "../types"
+import type {Equatable, Comparator} from "./eq"
+import {equals} from "./eq"
 import {AssertionError} from "./assert"
 import {BitSet} from "./bitset"
 import {range} from "./array"
 
-export const PackedIndices = BitSet
-export type PackedIndices = BitSet
-
-export class OpaqueIndices implements Indices {
+export class OpaqueIndices implements Indices, Equatable {
 
   protected readonly _indices: Set<number>
 
@@ -29,6 +28,41 @@ export class OpaqueIndices implements Indices {
 
   static from(indices: Indices): OpaqueIndices {
     return new OpaqueIndices(indices.size, indices)
+  }
+
+  static all_set(size: number): OpaqueIndices {
+    return new OpaqueIndices(size, 1)
+  }
+
+  static all_unset(size: number): OpaqueIndices {
+    return new OpaqueIndices(size, 0)
+  }
+
+  static from_indices(size: number, indices: Iterable<number>): OpaqueIndices {
+    const bits = new OpaqueIndices(size)
+    for (const i of indices) {
+      bits.set(i)
+    }
+    return bits
+  }
+
+  static from_booleans(size: number, booleans: Iterable<boolean>): OpaqueIndices {
+    const bits = new OpaqueIndices(size)
+    let i = 0
+    for (const boolean of booleans) {
+      if (i == size) {
+        break
+      }
+      if (boolean) {
+        bits.set(i)
+      }
+      i += 1
+    }
+    return bits
+  }
+
+  [equals](that: this, cmp: Comparator): boolean {
+    return this.size == that.size && cmp.eq(this._indices, that._indices)
   }
 
   *[Symbol.iterator](): Iterator<number> {
@@ -158,3 +192,6 @@ export class OpaqueIndices implements Indices {
     return result
   }
 }
+
+export const PackedIndices = BitSet // or OpaqueIndices
+export type PackedIndices = BitSet // or OpaqueIndices
