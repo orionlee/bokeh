@@ -134,7 +134,7 @@ export class BitSet implements Indices, Equatable {
     return this._count
   }
 
-  protected _bit_count(i: number): number {
+  protected static _bit_count(i: number): number {
     // https://stackoverflow.com/questions/109023/count-the-number-of-set-bits-in-a-32-bit-integer/109025#109025
     i = i | 0                                        // convert to an integer
     i = i - ((i >>> 1) & 0x55555555)                 // add pairs of bits
@@ -145,27 +145,23 @@ export class BitSet implements Indices, Equatable {
   }
 
   protected _get_count(): number {
-    const {_array, _nwords, size} = this
+    const {_array, _nwords} = this
     let c = 0
-    for (let k = 0, i = 0; i < _nwords; i++) {
+    for (let i = 0; i < _nwords; i++) {
       const word = _array[i]
       if (word == 0) {
         continue
       } else if (word == FULL_WORD) {
         c += WORD_LENGTH
       } else {
-        for (let j = 0; j < WORD_LENGTH && k < size; j++, k++) {
-          if (((word >>> j) & 0b1) == 0b1) {
-            c += 1
-          }
-        }
-        //c += this._bit_count(word)
+        c += BitSet._bit_count(word)
       }
     }
     return c
   }
 
   protected _update_count(): void {
+    this._clear_trailing()
     this._count = this._get_count()
   }
 
