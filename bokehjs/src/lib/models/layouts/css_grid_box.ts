@@ -133,7 +133,7 @@ export abstract class CSSGridBoxView extends LayoutDOMView {
       })
     }
 
-    const default_size = "auto"
+    const default_size = "max-content"
     styles.grid_template_rows = rows_template.map(({size}) => size ?? default_size).join(" ")
     styles.grid_template_columns = cols_template.map(({size}) => size ?? default_size).join(" ")
 
