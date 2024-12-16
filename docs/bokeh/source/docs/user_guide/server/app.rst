@@ -525,7 +525,7 @@ session callback with a different update rate.
         source.stream(dict(x=[source.data['x'][-1]+1], y=[i], color=["red"]))
 
     p = figure(x_range=[0, 100], y_range=[0, 20])
-    l = p.circle(x='x', y='y', color='color', source=source)
+    l = p.circle(x='x', y='y', radius=0.5, color='color', source=source)
 
     doc.add_periodic_callback(unlocked_task, 1000)
     doc.add_periodic_callback(update, 200)
